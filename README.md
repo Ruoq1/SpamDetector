@@ -3,7 +3,7 @@
 
 DataSet:  http://nlp.cs.aueb.gr/software_and_datasets/Enron-Spam/index.html
 
-Do not directly push to main
+Do not directly push to main.
 Have your own feature branch. If not sure how to do, ask CHATGPT
 
 TODOs and DDLs
