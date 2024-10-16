@@ -13,7 +13,7 @@ from nltk.corpus import stopwords
 
 
 
-df = pd.read_csv('E:\\ECE\\CS410\\Spam_detector\\spam_ham_dataset.csv')
+df = pd.read_csv('/Users/diwakar/Code/CS410_Group38_SpamDetector/spam_ham_dataset.csv')
 stop_words = set(stopwords.words('english')) # set of stopwords
 
 # preprocess

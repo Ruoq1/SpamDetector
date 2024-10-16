@@ -3,12 +3,12 @@ import pandas as pd
 
 # def enron dataset path, each dataset contains spam and ham folders
 enron_datasets = [
-    "E:\\ECE\\CS410\\enron1",
-    "E:\\ECE\\CS410\\enron2",
-    "E:\\ECE\\CS410\\enron3",
-    "E:\\ECE\\CS410\\enron4",
-    "E:\\ECE\\CS410\\enron5",
-    "E:\\ECE\\CS410\\enron6"
+    "/Users/diwakar/Code/enron/enron1",
+    "/Users/diwakar/Code/enron/enron2",
+    "/Users/diwakar/Code/enron/enron3",
+    "/Users/diwakar/Code/enron/enron4",
+    "/Users/diwakar/Code/enron/enron5",
+    "/Users/diwakar/Code/enron/enron6"
 ]
 
 # define a function to load emails from a folder
