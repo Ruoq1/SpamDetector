@@ -17,6 +17,7 @@ print("Loading dataset...")
 
 # ---------------------------REPLACE THE FILE PATH WITH YOUR OWN FILE PATH---------------------------
 df = pd.read_csv('E:\\ECE\\CS410\\Spam_detector\\spam_ham_dataset.csv')
+# df = pd.read_csv('/Users/diwakar/Code/CS410_Group38_SpamDetector/spam_ham_dataset.csv')
 # ---------------------------REPLACE THE FILE PATH WITH YOUR OWN FILE PATH---------------------------
 
 
