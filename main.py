@@ -12,6 +12,8 @@ nltk.download('stopwords')
 from nltk.corpus import stopwords
 
 
+
+
 print("Loading dataset...")
 
 
@@ -24,19 +26,41 @@ df = pd.read_csv('E:\\ECE\\CS410\\Spam_detector\\spam_ham_dataset.csv')
 
 print(f"Dataset loaded: {df.shape[0]} rows")
 
-stop_words = set(stopwords.words('english')) # set of stopwords
+class TextProcessor:
+    def __init__(self, custom_stopwords=None):
+        # initialize punctuations and stopwords
+        self.punctuations = r'''!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~'''
+        self.stop_words = set(stopwords.words('english'))
+        
+        # add custom stopwords
+        if custom_stopwords:
+            self.stop_words.update(custom_stopwords)
+    
+    def preprocess_text(self, text):
+        # convert to lowercase
+        text = text.lower()
+        
+        # remove HTML tags
+        text = re.sub(r'<.*?>', '', text)
+        
+        # remove numbers
+        text = re.sub(r'\d+', '', text)
+        
+        # remove punctuations
+        clean_text = ''.join([char if char not in self.punctuations else ' ' for char in text])
+        
+        # split words and remove stopwords
+        words = clean_text.split()
+        filtered_words = [word for word in words if word not in self.stop_words and len(word) > 1]
+        
+        return ' '.join(filtered_words)
 
-# preprocess
-def preprocess_text(text):
-    text = text.lower()
-    text = re.sub(r'\W', ' ', text)  # remove non-word characters
-    text = re.sub(r'\s+', ' ', text)  # remove extra spaces
-    words = text.split()
-    words = [word for word in words if word not in stop_words] 
-    return ' '.join(words)
+# set custom stopwords
+custom_stopwords = {"enron", "hou", "subject", "ect", "com", "http", "www", "cc", "forwarded", "pm", "am"}
+processor = TextProcessor(custom_stopwords=custom_stopwords)
 
 # apply the preprocess_text function to the 'text' column
-df['processed_text'] = df['content'].apply(preprocess_text)
+df['processed_text'] = df['content'].apply(processor.preprocess_text)
 
 # Print sample of original vs processed text only once
 print("Sample of original and processed text:")
