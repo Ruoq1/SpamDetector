@@ -71,46 +71,22 @@ cbow_model = Word2Vec(sentences=tokenized_text, vector_size=100, window=5, min_c
 X_cbow = np.array([get_average_word2vec(tokens, cbow_model, 100) for tokens in tokenized_text])
 print(f"CBOW extraction complete. Matrix shape: {X_cbow.shape}")
 
-# ---- MODEL TRAINING AND CONFUSION MATRIX ----
-# def train_and_evaluate(X, y, feature_type):
-#     """
-#     Train and evaluate an SVM model using the specified features and plot confusion matrix.
-#     """
-#     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-#     svm_model = svm.SVC(kernel='linear')
-#     svm_model.fit(X_train, y_train)
-#     y_pred = svm_model.predict(X_test)
-
-#     # Evaluate performance
-#     accuracy = accuracy_score(y_test, y_pred)
-#     precision = precision_score(y_test, y_pred)
-#     recall = recall_score(y_test, y_pred)
-#     f1 = f1_score(y_test, y_pred)
-
-#     print(f"Evaluation results using {feature_type} features:")
-#     print(f"Accuracy: {accuracy:.4f}")
-#     print(f"Precision: {precision:.4f}")
-#     print(f"Recall: {recall:.4f}")
-#     print(f"F1 Score: {f1:.4f}")
-
-#     # Confusion matrix
-#     cm = confusion_matrix(y_test, y_pred)
-#     plt.figure(figsize=(6, 4))
-#     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['Ham', 'Spam'], yticklabels=['Ham', 'Spam'], annot_kws={"size": 10})
-#     plt.xlabel('Predicted Labels')
-#     plt.ylabel('True Labels')
-#     plt.title(f"Confusion Matrix ({feature_type})")
-#     plt.show()
-def train_and_evaluate(X, y, feature_type):
+def train_and_evaluate(X, y, feature_type, svm_model=None):
     """
     Train and evaluate an SVM model using the specified features and output results in text format.
     """
     # Split data into train and test sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    
-    # Train SVM model
-    svm_model = svm.SVC(kernel='linear')
-    svm_model.fit(X_train, y_train)
+
+    full_model = None
+
+    # If no model is provided, train a new model for evaluating and a full model using entire set
+    if svm_model is None:
+        svm_model = svm.SVC(kernel='linear')
+        svm_model.fit(X_train, y_train)
+        full_model = svm.SVC(kernel='linear')
+        full_model.fit(X, y)
+
     y_pred = svm_model.predict(X_test)
 
     # Evaluate performance
@@ -137,14 +113,55 @@ def train_and_evaluate(X, y, feature_type):
     print(f"True Negatives (Ham correctly identified): {tn}")
     print(f"False Positives (Ham misclassified as Spam): {fp}")
     print(f"False Negatives (Spam misclassified as Ham): {fn}")
+
+    return full_model
+
 # Target labels
 y = df['label']
 
 print("Training and evaluating using TF-IDF features...")
-train_and_evaluate(X_tfidf, y, feature_type="TF-IDF")
+enron_tfidf_model = train_and_evaluate(X_tfidf, y, feature_type="TF-IDF")
 
 print("Training and evaluating using Word2Vec features...")
-train_and_evaluate(X_word2vec, y, feature_type="Word2Vec")
+enron_word2vec_model = train_and_evaluate(X_word2vec, y, feature_type="Word2Vec")
 
 print("Training and evaluating using CBOW features...")
-train_and_evaluate(X_cbow, y, feature_type="CBOW")
+enron_cbow_model = train_and_evaluate(X_cbow, y, feature_type="CBOW")
+
+# Read spam_assassin dataset
+df_new = pd.read_csv('data/spam_assassin.csv')
+df_new['processed_text'] = df_new['text'].apply(processor.preprocess_text)
+
+print("Sample of original and processed text for new dataset:")
+print(df_new[['text', 'processed_text']].head())
+
+# ---- TF-IDF FEATURE EXTRACTION ----
+print("Extracting features using TF-IDF...")
+X_tfidf_new = TfidfVectorizer(max_features=1000).fit_transform(df_new['processed_text']).toarray()
+print(f"TF-IDF extraction complete. Matrix shape: {X_tfidf_new.shape}")
+
+# ---- WORD2VEC FEATURE EXTRACTION ----
+print("Extracting features using Word2Vec...")
+tokenized_text_new = df_new['processed_text'].apply(lambda x: x.split())
+# word2vec_model_new = Word2Vec(sentences=tokenized_text_new, vector_size=100, window=5, min_count=1, workers=4)
+X_word2vec_new = np.array([get_average_word2vec(tokens, word2vec_model, 100) for tokens in tokenized_text_new])
+
+print(f"Word2Vec extraction complete. Matrix shape: {X_word2vec_new.shape}")
+
+# ---- CBOW FEATURE EXTRACTION ----
+print("Extracting features using CBOW...")
+# cbow_model_new = Word2Vec(sentences=tokenized_text_new, vector_size=100, window=5, min_count=1, workers=4, sg=0)
+X_cbow_new = np.array([get_average_word2vec(tokens, cbow_model, 100) for tokens in tokenized_text_new])
+print(f"CBOW extraction complete. Matrix shape: {X_cbow_new.shape}")
+
+y_new = df_new['target']
+
+# Evaluate the existing models on the new dataset
+print("Evaluating pre-trained model on the new dataset using TF-IDF features...")
+train_and_evaluate(X_tfidf_new, y_new, feature_type="TF-IDF", svm_model=enron_tfidf_model)
+
+print("Evaluating pre-trained model on the new dataset using Word2Vec features...")
+train_and_evaluate(X_word2vec_new, y_new, feature_type="Word2Vec", svm_model=enron_word2vec_model)
+
+print("Evaluating pre-trained model on the new dataset using CBOW features...")
+train_and_evaluate(X_cbow_new, y_new, feature_type="CBOW", svm_model=enron_cbow_model)
