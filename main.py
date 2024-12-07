@@ -165,3 +165,52 @@ train_and_evaluate(X_word2vec_new, y_new, feature_type="Word2Vec", svm_model=enr
 
 print("Evaluating pre-trained model on the new dataset using CBOW features...")
 train_and_evaluate(X_cbow_new, y_new, feature_type="CBOW", svm_model=enron_cbow_model)
+print("\n")
+
+
+# Train on SpamAssassin Dataset and test on Enron Dataset
+
+
+# ---- WORD2VEC FEATURE EXTRACTION ----
+print("Extracting features using Word2Vec...")
+word2vec_model_new = Word2Vec(sentences=tokenized_text_new, vector_size=100, window=5, min_count=1, workers=4)
+X_word2vec_assassin = np.array([get_average_word2vec(tokens, word2vec_model_new, 100) for tokens in tokenized_text_new])
+
+print(f"Word2Vec extraction complete. Matrix shape: {X_word2vec_assassin.shape}")
+
+# ---- CBOW FEATURE EXTRACTION ----
+print("Extracting features using CBOW...")
+cbow_model_new = Word2Vec(sentences=tokenized_text_new, vector_size=100, window=5, min_count=1, workers=4, sg=0)
+X_cbow_assassin = np.array([get_average_word2vec(tokens, cbow_model_new, 100) for tokens in tokenized_text_new])
+print(f"CBOW extraction complete. Matrix shape: {X_cbow_assassin.shape}")
+
+# Train models for SpamAssassin dataset
+print("Training and evaluating using TF-IDF features on SpamAssassin dataset...")
+spamassassin_tfidf_model = train_and_evaluate(X_tfidf_new, y_new, feature_type="TF-IDF")
+
+print("Training and evaluating using Word2Vec features on SpamAssassin dataset...")
+spamassassin_word2vec_model = train_and_evaluate(X_word2vec_assassin, y_new, feature_type="Word2Vec")
+
+print("Training and evaluating using CBOW features on SpamAssassin dataset...")
+spamassassin_cbow_model = train_and_evaluate(X_cbow_assassin, y_new, feature_type="CBOW")
+
+# ---- WORD2VEC FEATURE EXTRACTION ----
+print("Extracting features using Word2Vec...")
+X_word2vec_enron = np.array([get_average_word2vec(tokens, word2vec_model_new, 100) for tokens in tokenized_text])
+
+print(f"Word2Vec extraction complete. Matrix shape: {X_word2vec_enron.shape}")
+
+# ---- CBOW FEATURE EXTRACTION ----
+print("Extracting features using CBOW...")
+X_cbow_enron = np.array([get_average_word2vec(tokens, cbow_model_new, 100) for tokens in tokenized_text])
+print(f"CBOW extraction complete. Matrix shape: {X_cbow_enron.shape}")
+
+# Test SpamAssassin models on Enron dataset
+print("Evaluating SpamAssassin-trained model on Enron dataset using TF-IDF features...")
+train_and_evaluate(X_tfidf, y, feature_type="TF-IDF", svm_model=spamassassin_tfidf_model)
+
+print("Evaluating SpamAssassin-trained model on Enron dataset using Word2Vec features...")
+train_and_evaluate(X_word2vec_enron, y, feature_type="Word2Vec", svm_model=spamassassin_word2vec_model)
+
+print("Evaluating SpamAssassin-trained model on Enron dataset using CBOW features...")
+train_and_evaluate(X_cbow_enron, y, feature_type="CBOW", svm_model=spamassassin_cbow_model)
