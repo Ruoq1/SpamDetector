@@ -4,12 +4,10 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn import svm
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from gensim.models import Word2Vec
-import os
 import re
 import numpy as np
 import nltk
 import matplotlib.pyplot as plt
-import seaborn as sns
 nltk.download('stopwords')
 from nltk.corpus import stopwords
 
@@ -115,19 +113,52 @@ def train_and_evaluate(X, y, feature_type, svm_model=None):
     print(f"False Positives (Ham misclassified as Spam): {fp}")
     print(f"False Negatives (Spam misclassified as Ham): {fn}\n")
 
-    return full_model
+    return accuracy, precision, recall, f1, full_model
+
+
+def plot_comparison(models_metrics, title, figure_name):
+    """
+    Plot a bar chart comparing the performance of different models.
+    models_metrics is a dictionary with model names as keys and a tuple of (accuracy, precision, recall, f1) as values.
+    """
+    labels = ['Accuracy', 'Precision', 'Recall', 'F1 Score']
+    colors = ['#66b3ff', '#ffb366', '#99e699']
+
+    x = np.arange(len(labels))  # the label locations
+    width = 0.2  # the width of the bars
+
+    _, ax = plt.subplots(figsize=(10, 6))
+
+    for i, (model_name, metrics) in enumerate(models_metrics.items()):
+        ax.bar(x + (i - 1) * width, metrics, width, label=model_name, color=colors[i])
+
+    ax.set_xlabel('Metrics')
+    ax.set_ylabel('Scores')
+    ax.set_title(title)
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels)
+    ax.legend()
+
+    plt.tight_layout()
+    plt.savefig(figure_name)
 
 
 y = df['label']
+enron_metrics = {}
 
 print("Training and evaluating on Enron Dataset using TF-IDF features...")
-enron_tfidf_model = train_and_evaluate(X_tfidf, y, feature_type="TF-IDF")
+accuracy, precision, recall, f1, enron_tfidf_model = train_and_evaluate(X_tfidf, y, feature_type="TF-IDF")
+enron_metrics['TF-IDF (Enron)'] = (accuracy, precision, recall, f1)
 
 print("Training and evaluating on Enron Dataset using Word2Vec features...")
-enron_word2vec_model = train_and_evaluate(X_word2vec, y, feature_type="Word2Vec")
+accuracy, precision, recall, f1, enron_word2vec_model = train_and_evaluate(X_word2vec, y, feature_type="Word2Vec")
+enron_metrics['Word2Vec (Enron)'] = (accuracy, precision, recall, f1)
 
 print("Training and evaluating on Enron Dataset using CBOW features...")
-enron_cbow_model = train_and_evaluate(X_cbow, y, feature_type="CBOW")
+accuracy, precision, recall, f1, enron_cbow_model = train_and_evaluate(X_cbow, y, feature_type="CBOW")
+enron_metrics['CBOW (Enron)'] = (accuracy, precision, recall, f1)
+
+plot_comparison(enron_metrics, title="Models trained from Enron Dataset", figure_name="enron_models.png")
 
 
 # Read SpamAssassin dataset
@@ -157,14 +188,20 @@ print(f"CBOW extraction complete. Matrix shape: {X_cbow_new.shape}\n")
 y_new = df_new['target']
 
 # Evaluate Enron models on SpamAssassin Dataset
+enron_metrics_on_spamassassin = {}
 print("\nEvaluating Enron model on SpamAssassin Dataset using TF-IDF features...")
-train_and_evaluate(X_tfidf_new, y_new, feature_type="TF-IDF", svm_model=enron_tfidf_model)
+accuracy, precision, recall, f1, _ = train_and_evaluate(X_tfidf_new, y_new, feature_type="TF-IDF", svm_model=enron_tfidf_model)
+enron_metrics_on_spamassassin['TF-IDF (Enron)'] = (accuracy, precision, recall, f1)
 
 print("Evaluating Enron model on SpamAssassin Dataset using Word2Vec features...")
-train_and_evaluate(X_word2vec_new, y_new, feature_type="Word2Vec", svm_model=enron_word2vec_model)
+accuracy, precision, recall, f1, _ = train_and_evaluate(X_word2vec_new, y_new, feature_type="Word2Vec", svm_model=enron_word2vec_model)
+enron_metrics_on_spamassassin['Word2Vec (Enron)'] = (accuracy, precision, recall, f1)
 
 print("Evaluating Enron model on SpamAssassin Dataset using CBOW features...")
-train_and_evaluate(X_cbow_new, y_new, feature_type="CBOW", svm_model=enron_cbow_model)
+accuracy, precision, recall, f1, _ = train_and_evaluate(X_cbow_new, y_new, feature_type="CBOW", svm_model=enron_cbow_model)
+enron_metrics_on_spamassassin['CBOW (Enron)'] = (accuracy, precision, recall, f1)
+
+plot_comparison(enron_metrics_on_spamassassin, title="Evaluate Enron models on SpamAssassin Dataset", figure_name="enron_models_on_spamassassin.png")
 print("\n")
 
 # --------------- Train on SpamAssassin Dataset and test on Enron Dataset ---------------
@@ -182,15 +219,20 @@ X_cbow_assassin = np.array([get_average_word2vec(tokens, cbow_model_new, 100) fo
 print(f"CBOW extraction complete. Matrix shape: {X_cbow_assassin.shape}\n")
 
 # Train models for SpamAssassin dataset
+spamassassin_metrics = {}
 print("\nTraining and evaluating on SpamAssassin dataset using TF-IDF features...")
-spamassassin_tfidf_model = train_and_evaluate(X_tfidf_new, y_new, feature_type="TF-IDF")
+accuracy, precision, recall, f1, spamassassin_tfidf_model = train_and_evaluate(X_tfidf_new, y_new, feature_type="TF-IDF")
+spamassassin_metrics['TF-IDF (SpamAssassin)'] = (accuracy, precision, recall, f1)
 
 print("Training and evaluating on SpamAssassin dataset using Word2Vec features...")
-spamassassin_word2vec_model = train_and_evaluate(X_word2vec_assassin, y_new, feature_type="Word2Vec")
+accuracy, precision, recall, f1, spamassassin_word2vec_model = train_and_evaluate(X_word2vec_assassin, y_new, feature_type="Word2Vec")
+spamassassin_metrics['Word2Vec (SpamAssassin)'] = (accuracy, precision, recall, f1)
 
 print("Training and evaluating on SpamAssassin dataset using CBOW features...")
-spamassassin_cbow_model = train_and_evaluate(X_cbow_assassin, y_new, feature_type="CBOW")
+accuracy, precision, recall, f1, spamassassin_cbow_model = train_and_evaluate(X_cbow_assassin, y_new, feature_type="CBOW")
+spamassassin_metrics['CBOW (SpamAssassin)'] = (accuracy, precision, recall, f1)
 
+plot_comparison(spamassassin_metrics, title="Models trained from SpamAssassin Dataset", figure_name="spamassassin_models.png")
 print("\n")
 
 # word2vec feature extraction for Enron dataset, using model from SpamAssassin dataset, used for testing
@@ -204,11 +246,17 @@ X_cbow_enron = np.array([get_average_word2vec(tokens, cbow_model_new, 100) for t
 print(f"CBOW extraction complete. Matrix shape: {X_cbow_enron.shape}\n")
 
 # Evaluate SpamAssassin models on Enron dataset
+spamassassin_metrics_on_enron = {}
 print("\nEvaluating SpamAssassin model on Enron dataset using TF-IDF features...")
-train_and_evaluate(X_tfidf, y, feature_type="TF-IDF", svm_model=spamassassin_tfidf_model)
+accuracy, precision, recall, f1, _ = train_and_evaluate(X_tfidf, y, feature_type="TF-IDF", svm_model=spamassassin_tfidf_model)
+spamassassin_metrics_on_enron['TF-IDF (SpamAssassin)'] = (accuracy, precision, recall, f1)
 
 print("Evaluating SpamAssassin model on Enron dataset using Word2Vec features...")
-train_and_evaluate(X_word2vec_enron, y, feature_type="Word2Vec", svm_model=spamassassin_word2vec_model)
+accuracy, precision, recall, f1, _ = train_and_evaluate(X_word2vec_enron, y, feature_type="Word2Vec", svm_model=spamassassin_word2vec_model)
+spamassassin_metrics_on_enron['Word2Vec (SpamAssassin)'] = (accuracy, precision, recall, f1)
 
 print("Evaluating SpamAssassin model on Enron dataset using CBOW features...")
-train_and_evaluate(X_cbow_enron, y, feature_type="CBOW", svm_model=spamassassin_cbow_model)
+accuracy, precision, recall, f1, _ = train_and_evaluate(X_cbow_enron, y, feature_type="CBOW", svm_model=spamassassin_cbow_model)
+spamassassin_metrics_on_enron['CBOW (SpamAssassin)'] = (accuracy, precision, recall, f1)
+
+plot_comparison(spamassassin_metrics_on_enron, title="Evaluate SpamAssassin models on Enron Dataset", figure_name="spamassassin_models_on_enron.png")

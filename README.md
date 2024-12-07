@@ -1,5 +1,9 @@
 # CS410_Group38_SpamDetector
 
+## Setup
+
+1. **Unix-like platforms**: Run `./run.sh` to create a virtual environment, install dependencies, and run the programs.
+2. **Others**: Install required libraries and run programs `eda.py` and `main.py`.
 
 DataSet:  http://nlp.cs.aueb.gr/software_and_datasets/Enron-Spam/index.html
 
