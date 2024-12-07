@@ -10,7 +10,9 @@ nltk.download('stopwords')
 
 # Load dataset
 stop_words = set(stopwords.words('english'))
-df = pd.read_csv('E:\\ECE\\CS410\\Spam_detector\\spam_ham_dataset.csv')
+df = pd.read_csv('data/spam_ham_dataset.csv')
+
+print(f"Dataset loaded: {df.shape[0]} rows")
 
 class TextProcessor:
     def __init__(self, custom_stopwords=None):
@@ -80,7 +82,7 @@ axes[1].set_title('Top 20 Words in Ham Emails')
 axes[1].invert_yaxis()
 
 plt.tight_layout()
-plt.show()
+plt.savefig('spam_ham_plot.png')
 
 # ---- Cosine Similarity Analysis ----
 print("Calculating cosine similarity between documents...")
@@ -90,10 +92,15 @@ tfidf_vectorizer = TfidfVectorizer()
 tfidf_matrix = tfidf_vectorizer.fit_transform(df['processed_text'])
 
 # Calculate cosine similarity
-cosine_sim = cosine_similarity(tfidf_matrix)
+sample_size = 1000
+sample_indices = pd.Series(df.index[:sample_size].tolist() + df.index[-sample_size:].tolist())
+
+selected_tfidf_matrix = tfidf_matrix[sample_indices]
+
+cosine_sim = cosine_similarity(selected_tfidf_matrix, selected_tfidf_matrix)
 
 # Convert similarity matrix to DataFrame for easier viewing
-cosine_sim_df = pd.DataFrame(cosine_sim, index=df.index, columns=df.index)
+cosine_sim_df = pd.DataFrame(cosine_sim, index=sample_indices, columns=sample_indices)
 
 # Display a sample of the similarity matrix
 print("Cosine Similarity Matrix (sample):")

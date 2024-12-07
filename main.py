@@ -15,9 +15,7 @@ from nltk.corpus import stopwords
 
 print("Loading dataset...")
 
-# ---------------------------REPLACE THE FILE PATH WITH YOUR OWN FILE PATH---------------------------
-df = pd.read_csv('E:\\ECE\\CS410\\Spam_detector\\data\\spam_ham_dataset.csv')
-# ---------------------------REPLACE THE FILE PATH WITH YOUR OWN FILE PATH---------------------------
+df = pd.read_csv('data/spam_ham_dataset.csv')
 
 print(f"Dataset loaded: {df.shape[0]} rows")
 
